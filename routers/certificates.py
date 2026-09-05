@@ -184,9 +184,16 @@ async def get_my_certificate_for_course(request: Request):
     records = await storage.list_certificates_for_user(user_id)
     for r in records:
         if r.get("course_id") == course_id:
+            token = _sign_certificate(
+                r["cert_id"], user_id, r["full_name"], r["course_id"], r["course_title"]
+            )
+            verify_url = f"{FRONTEND_VERIFY_URL}?token={token}"
             return JSONResponse(
                 {
                     "cert_id": r["cert_id"],
+                    "token": token,
+                    "verify_url": verify_url,
+                    "qr_png_base64": qr_utils.generate_qr_png_data_uri(verify_url),
                     "course_id": r["course_id"],
                     "course_title": r["course_title"],
                     "full_name": r["full_name"],
